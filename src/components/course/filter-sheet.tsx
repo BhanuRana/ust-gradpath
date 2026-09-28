@@ -1,27 +1,10 @@
 import { Ionicons } from "@expo/vector-icons"
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react"
-import {
-  type LayoutChangeEvent,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Switch,
-  useWindowDimensions,
-  View,
-} from "react-native"
-import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler"
-import Animated, {
-  Easing,
-  interpolate,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from "react-native-reanimated"
+import { type ReactNode, useMemo, useState } from "react"
+import { Pressable, StyleSheet, Switch, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { scheduleOnRN } from "react-native-worklets"
 
 import { Chip } from "@/components/ui/chip"
+import { Sheet } from "@/components/ui/sheet"
 import { Text } from "@/components/ui/text"
 import { getIndex } from "@/data/catalog"
 import type { Career } from "@/data/types"
@@ -53,9 +36,6 @@ interface FilterSheetProps {
   onClose: () => void
 }
 
-const OPEN = { duration: 320, easing: Easing.out(Easing.cubic) }
-const CLOSE = { duration: 220, easing: Easing.in(Easing.cubic) }
-
 const LEVELS: { value: Career | undefined; label: string }[] = [
   { value: undefined, label: "All" },
   { value: "UG", label: "Undergraduate" },
@@ -76,74 +56,19 @@ export function FilterSheet({
   onClose,
 }: FilterSheetProps) {
   const { top } = useSafeAreaInsets()
-  const { height: screenHeight } = useWindowDimensions()
   const { terms, departments, courses } = getIndex()
 
-  const [mounted, setMounted] = useState(visible)
   const [draft, setDraft] = useState(value)
   const [pickerOpen, setPickerOpen] = useState(false)
-
-  const progress = useSharedValue(0)
-  const drag = useSharedValue(0)
-  const sheetHeight = useSharedValue(screenHeight)
 
   // Take a fresh draft each time the sheet opens, and only then: never while it's in use.
   const [wasVisible, setWasVisible] = useState(visible)
   if (visible !== wasVisible) {
     setWasVisible(visible)
-    if (visible) {
-      setDraft(value)
-      setMounted(true)
-    }
-  }
-  useEffect(() => {
-    if (visible) drag.value = 0
-  }, [visible, drag])
-
-  const finishClose = useCallback(() => {
-    setMounted(false)
-    onClose()
-  }, [onClose])
-
-  const close = useCallback(() => {
-    drag.value = withTiming(0, CLOSE)
-    progress.value = withTiming(0, CLOSE, (done) => {
-      if (done) scheduleOnRN(finishClose)
-    })
-  }, [drag, progress, finishClose])
-
-  const apply = () => {
-    onApply(draft)
-    close()
+    if (visible) setDraft(value)
   }
 
-  const onSheetLayout = (e: LayoutChangeEvent) => {
-    sheetHeight.value = e.nativeEvent.layout.height
-    if (progress.value === 0) progress.value = withTiming(1, OPEN)
-  }
-
-  // Swipe up to dismiss; pulling down stretches a little and springs back.
-  const pan = Gesture.Pan()
-    .activeOffsetY([-8, 8])
-    .onUpdate((e) => {
-      drag.value = e.translationY < 0 ? e.translationY : e.translationY * 0.15
-    })
-    .onEnd((e) => {
-      if (e.translationY < -sheetHeight.value * 0.25 || e.velocityY < -700) {
-        scheduleOnRN(close)
-      } else {
-        drag.value = withSpring(0, { damping: 18, stiffness: 220 })
-      }
-    })
-
-  const sheetAnimated = useAnimatedStyle(() => ({
-    transform: [{ translateY: (progress.value - 1) * sheetHeight.value + drag.value }],
-  }))
-  const backdropAnimated = useAnimatedStyle(() => ({
-    opacity: progress.value * interpolate(drag.value, [-sheetHeight.value, 0], [0, 1], "clamp"),
-  }))
-
-  const resultCount = useMemo(() => (mounted ? countFor(draft) : 0), [mounted, countFor, draft])
+  const resultCount = useMemo(() => countFor(draft), [countFor, draft])
 
   // Department counts follow the draft's term and level, so the picker shows dead ends.
   const departmentCounts = useMemo(() => {
@@ -163,172 +88,164 @@ export function FilterSheet({
     !!draft.onlyUnlocked === !!defaults.onlyUnlocked
   const update = (patch: Partial<CourseFilters>) => setDraft((d) => ({ ...d, ...patch }))
 
-  if (!mounted) return null
-
   return (
-    <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={close}>
-      <GestureHandlerRootView style={styles.flex}>
-        <Animated.View style={[styles.backdrop, backdropAnimated]}>
-          <Pressable
-            style={styles.flex}
-            onPress={close}
-            accessibilityRole="button"
-            accessibilityLabel="Cancel"
-          />
-        </Animated.View>
-
-        <GestureDetector gesture={pan}>
-          <Animated.View
-            onLayout={onSheetLayout}
-            style={[styles.sheet, { paddingTop: top + spacing.xs }, sheetAnimated]}
-            testID="filter-sheet"
-          >
-            <View style={styles.titleRow}>
-              <Text size="lg" weight="medium">
-                Filters
-              </Text>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setDraft(defaults)}
-                disabled={isDefault}
-                hitSlop={10}
-              >
-                <Text weight="medium" style={isDefault ? styles.dim : styles.tint}>
-                  Reset
-                </Text>
-              </Pressable>
-            </View>
-
-            <Section title="Term">
-              <View style={styles.wrap}>
-                <Chip
-                  label="All terms"
-                  selected={draft.term === undefined}
-                  onPress={() => update({ term: undefined })}
-                />
-                {terms.map((t, i) => (
-                  <Chip
-                    key={t.code}
-                    label={t.name}
-                    selected={draft.term === i}
-                    onPress={() => update({ term: i })}
-                  />
-                ))}
-              </View>
-            </Section>
-
-            <Section title="Level">
-              <View style={styles.segmented} accessibilityRole="radiogroup">
-                {LEVELS.map((level) => {
-                  const selected = draft.career === level.value
-                  return (
-                    <Pressable
-                      key={level.label}
-                      accessibilityRole="radio"
-                      accessibilityState={{ selected }}
-                      accessibilityLabel={level.label}
-                      onPress={() => update({ career: level.value })}
-                      style={[styles.segment, selected && styles.segmentSelected]}
-                    >
-                      <Text
-                        size="xs"
-                        weight={selected ? "semiBold" : "medium"}
-                        style={selected ? styles.tint : styles.dim}
-                        numberOfLines={1}
-                      >
-                        {level.label}
-                      </Text>
-                    </Pressable>
-                  )
-                })}
-              </View>
-            </Section>
-
-            <Section title="Department">
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Department: ${draft.prefix ?? "All departments"}`}
-                testID="filter-department"
-                onPress={() => setPickerOpen(true)}
-                style={({ pressed }) => [styles.optionRow, pressed && styles.pressed]}
-              >
-                {draft.prefix ? (
-                  <DeptBadge prefix={draft.prefix} size={32} />
-                ) : (
-                  <View style={styles.iconTile}>
-                    <Ionicons name="apps-outline" size={16} color={colors.textDim} />
-                  </View>
-                )}
-                <Text weight="medium" style={styles.flex}>
-                  {draft.prefix ?? "All departments"}
-                </Text>
-                {draft.prefix && (
-                  <Text size="xs" style={styles.dim}>
-                    {departmentCounts.get(draft.prefix) ?? 0}
-                  </Text>
-                )}
-                <Ionicons name="chevron-forward" size={18} color={colors.textDim} />
-              </Pressable>
-            </Section>
-
-            {canFilterUnlocked && (
-              <Section title="My progress">
-                <Pressable
-                  accessibilityRole="switch"
-                  accessibilityLabel="Unlocked for me"
-                  accessibilityState={{ checked: !!draft.onlyUnlocked }}
-                  onPress={() => update({ onlyUnlocked: !draft.onlyUnlocked })}
-                  style={({ pressed }) => [styles.optionRow, pressed && styles.pressed]}
-                >
-                  <View style={styles.iconTile}>
-                    <Ionicons name="lock-open-outline" size={16} color={colors.success} />
-                  </View>
-                  <View style={styles.flex}>
-                    <Text weight="medium">Unlocked for me</Text>
-                    <Text size="xxs" style={styles.dim}>
-                      Only courses whose prerequisites you meet
-                    </Text>
-                  </View>
-                  <Switch
-                    value={!!draft.onlyUnlocked}
-                    onValueChange={(on) => update({ onlyUnlocked: on })}
-                    trackColor={{ true: colors.tint, false: colors.separator }}
-                    accessibilityElementsHidden
-                    importantForAccessibility="no-hide-descendants"
-                  />
-                </Pressable>
-              </Section>
-            )}
-
+    <Sheet
+      visible={visible}
+      edge="top"
+      onClose={onClose}
+      style={{ ...styles.sheet, paddingTop: top + spacing.xs }}
+      testID="filter-sheet"
+    >
+      {(close) => (
+        <>
+          <View style={styles.titleRow}>
+            <Text size="lg" weight="medium">
+              Filters
+            </Text>
             <Pressable
               accessibilityRole="button"
-              testID="filters-apply"
-              onPress={apply}
-              style={({ pressed }) => [
-                styles.apply,
-                resultCount === 0 && styles.applyEmpty,
-                pressed && styles.pressed,
-              ]}
+              onPress={() => setDraft(defaults)}
+              disabled={isDefault}
+              hitSlop={10}
             >
-              <Text weight="semiBold" style={resultCount === 0 ? styles.dim : styles.onTint}>
-                {resultCount === 0 ? "No matching courses" : `Show ${count(resultCount, "course")}`}
+              <Text weight="medium" style={isDefault ? styles.dim : styles.tint}>
+                Reset
               </Text>
             </Pressable>
+          </View>
 
-            <View style={styles.grabber} />
-          </Animated.View>
-        </GestureDetector>
+          <Section title="Term">
+            <View style={styles.wrap}>
+              <Chip
+                label="All terms"
+                selected={draft.term === undefined}
+                onPress={() => update({ term: undefined })}
+              />
+              {terms.map((t, i) => (
+                <Chip
+                  key={t.code}
+                  label={t.name}
+                  selected={draft.term === i}
+                  onPress={() => update({ term: i })}
+                />
+              ))}
+            </View>
+          </Section>
 
-        <DepartmentPicker
-          visible={pickerOpen}
-          departments={departments}
-          counts={departmentCounts}
-          selected={draft.prefix}
-          onSelect={(prefix) => update({ prefix })}
-          onClose={() => setPickerOpen(false)}
-        />
-      </GestureHandlerRootView>
-    </Modal>
+          <Section title="Level">
+            <View style={styles.segmented} accessibilityRole="radiogroup">
+              {LEVELS.map((level) => {
+                const selected = draft.career === level.value
+                return (
+                  <Pressable
+                    key={level.label}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={level.label}
+                    onPress={() => update({ career: level.value })}
+                    style={[styles.segment, selected && styles.segmentSelected]}
+                  >
+                    <Text
+                      size="xs"
+                      weight={selected ? "semiBold" : "medium"}
+                      style={selected ? styles.tint : styles.dim}
+                      numberOfLines={1}
+                    >
+                      {level.label}
+                    </Text>
+                  </Pressable>
+                )
+              })}
+            </View>
+          </Section>
+
+          <Section title="Department">
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Department: ${draft.prefix ?? "All departments"}`}
+              testID="filter-department"
+              onPress={() => setPickerOpen(true)}
+              style={({ pressed }) => [styles.optionRow, pressed && styles.pressed]}
+            >
+              {draft.prefix ? (
+                <DeptBadge prefix={draft.prefix} size={32} />
+              ) : (
+                <View style={styles.iconTile}>
+                  <Ionicons name="apps-outline" size={16} color={colors.textDim} />
+                </View>
+              )}
+              <Text weight="medium" style={styles.flex}>
+                {draft.prefix ?? "All departments"}
+              </Text>
+              {draft.prefix && (
+                <Text size="xs" style={styles.dim}>
+                  {departmentCounts.get(draft.prefix) ?? 0}
+                </Text>
+              )}
+              <Ionicons name="chevron-forward" size={18} color={colors.textDim} />
+            </Pressable>
+          </Section>
+
+          {canFilterUnlocked && (
+            <Section title="My progress">
+              <Pressable
+                accessibilityRole="switch"
+                accessibilityLabel="Unlocked for me"
+                accessibilityState={{ checked: !!draft.onlyUnlocked }}
+                onPress={() => update({ onlyUnlocked: !draft.onlyUnlocked })}
+                style={({ pressed }) => [styles.optionRow, pressed && styles.pressed]}
+              >
+                <View style={styles.iconTile}>
+                  <Ionicons name="lock-open-outline" size={16} color={colors.success} />
+                </View>
+                <View style={styles.flex}>
+                  <Text weight="medium">Unlocked for me</Text>
+                  <Text size="xxs" style={styles.dim}>
+                    Only courses whose prerequisites you meet
+                  </Text>
+                </View>
+                <Switch
+                  value={!!draft.onlyUnlocked}
+                  onValueChange={(on) => update({ onlyUnlocked: on })}
+                  trackColor={{ true: colors.tint, false: colors.separator }}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
+                />
+              </Pressable>
+            </Section>
+          )}
+
+          <Pressable
+            accessibilityRole="button"
+            testID="filters-apply"
+            onPress={() => {
+              onApply(draft)
+              close()
+            }}
+            style={({ pressed }) => [
+              styles.apply,
+              resultCount === 0 && styles.applyEmpty,
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text weight="semiBold" style={resultCount === 0 ? styles.dim : styles.onTint}>
+              {resultCount === 0 ? "No matching courses" : `Show ${count(resultCount, "course")}`}
+            </Text>
+          </Pressable>
+
+          <View style={styles.grabber} />
+
+          <DepartmentPicker
+            visible={pickerOpen}
+            departments={departments}
+            counts={departmentCounts}
+            selected={draft.prefix}
+            onSelect={(prefix) => update({ prefix })}
+            onClose={() => setPickerOpen(false)}
+          />
+        </>
+      )}
+    </Sheet>
   )
 }
 
@@ -349,23 +266,7 @@ const styles = StyleSheet.create({
   dim: { color: colors.textDim },
   tint: { color: colors.tint },
   onTint: { color: colors.white },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.overlay },
-  sheet: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.xs,
-    backgroundColor: colors.background,
-    borderBottomLeftRadius: radius.xl,
-    borderBottomRightRadius: radius.xl,
-    shadowColor: "#000",
-    shadowOpacity: 0.18,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 12,
-  },
+  sheet: { paddingHorizontal: spacing.md, paddingBottom: spacing.xs },
   titleRow: {
     flexDirection: "row",
     alignItems: "center",

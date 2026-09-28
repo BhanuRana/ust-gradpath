@@ -14,12 +14,14 @@ import { CodeChip } from "@/components/course/code-chip"
 import { Eligibility } from "@/components/course/eligibility"
 import { LinkedCodesText } from "@/components/course/linked-codes-text"
 import { PrereqTree } from "@/components/course/prereq-tree"
+import { PrerequisitePrompt } from "@/components/course/prerequisite-prompt"
 import { Section } from "@/components/course/section"
 import { HeroButton, HeroHeader, HeroPill } from "@/components/hero-header"
 import { Chip } from "@/components/ui/chip"
 import { EmptyState } from "@/components/ui/empty-state"
 import { Text } from "@/components/ui/text"
 import { getCourse, getCourseVersion, getIndex, getPrereqGraph } from "@/data/catalog"
+import { missingGroups } from "@/data/prereq/evaluate"
 import { prereqTreeFor, prerequisiteChain, unlockedBy } from "@/data/prereq/traverse"
 import { useCompleted, useStarred } from "@/hooks/use-preferences"
 import { count } from "@/lib/format"
@@ -33,8 +35,8 @@ export default function CourseScreen() {
   const { terms } = getIndex()
   const graph = getPrereqGraph()
   const course = getCourse(code)
-  const { starred, toggle: toggleStarred } = useStarred()
-  const { completed, toggle: toggleCompleted } = useCompleted()
+  const { starred, toggle: toggleStarred, add: addStarred } = useStarred()
+  const { completed, toggle: toggleCompleted, add: addCompleted } = useCompleted()
   const isStarred = starred.has(code)
   const isCompleted = completed.has(code)
 
@@ -55,6 +57,22 @@ export default function CourseScreen() {
   }, [graph, code, term])
   const unlocks = unlockedBy(graph, code)
   const open = (next: string) => openCourse(next, term)
+
+  // Starring or completing a course whose prerequisites aren't met asks about those too.
+  // Undoing either, or a course whose remaining requirements can't be checked, doesn't.
+  const [prompt, setPrompt] = useState<"star" | "complete">()
+  const missing = useMemo(
+    () => (tree && !isCompleted ? missingGroups(tree, completed) : []),
+    [tree, completed, isCompleted],
+  )
+  const onStarPress = () => {
+    if (!isStarred && missing.length > 0) setPrompt("star")
+    else toggleStarred(code)
+  }
+  const onCompletePress = () => {
+    if (!isCompleted && missing.length > 0) setPrompt("complete")
+    else toggleCompleted(code)
+  }
 
   // The code fades into the fixed bar once the big one on the band has scrolled under it.
   const { top } = useSafeAreaInsets()
@@ -81,7 +99,7 @@ export default function CourseScreen() {
           accessibilityLabel={isStarred ? "Unstar course" : "Star course"}
           accessibilityState={{ selected: isStarred }}
           testID="toggle-star"
-          onPress={() => toggleStarred(code)}
+          onPress={onStarPress}
         />
       ) : (
         <View style={styles.barSpacer} />
@@ -141,7 +159,7 @@ export default function CourseScreen() {
             accessibilityRole="button"
             accessibilityLabel={isCompleted ? "Completed" : "Mark as completed"}
             accessibilityState={{ checked: isCompleted }}
-            onPress={() => toggleCompleted(code)}
+            onPress={onCompletePress}
             testID="toggle-completed"
             style={({ pressed }) => [
               styles.completeButton,
@@ -276,6 +294,25 @@ export default function CourseScreen() {
           </Section>
         )}
       </Animated.ScrollView>
+
+      <PrerequisitePrompt
+        action="star"
+        visible={prompt === "star"}
+        code={code}
+        groups={missing}
+        already={starred}
+        onConfirm={addStarred}
+        onClose={() => setPrompt(undefined)}
+      />
+      <PrerequisitePrompt
+        action="complete"
+        visible={prompt === "complete"}
+        code={code}
+        groups={missing}
+        already={completed}
+        onConfirm={addCompleted}
+        onClose={() => setPrompt(undefined)}
+      />
     </View>
   )
 }
