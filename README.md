@@ -1,36 +1,19 @@
-![UST GradPath: 4,030 HKUST courses as one prerequisite graph. See what you can take, and your route to any course.](docs/social-preview.png)
+![UST GradPath: 4,030 HKUST courses as one prerequisite graph. See what you can take, and your route to any course.](docs/banner.png)
 
-[![CI](https://github.com/BhanuRana/ust-gradpath/actions/workflows/ci.yml/badge.svg)](https://github.com/BhanuRana/ust-gradpath/actions/workflows/ci.yml)
+HKUST lists prerequisites as free text. GradPath turns all 4,030 courses into one graph you can explore and, from what you've completed, shows what you can take now and the shortest route to what you can't. It works offline on iOS and Android, built with React Native, Expo and TypeScript.
 
-HKUST publishes prerequisites as free text, such as _"(COMP 2011 OR COMP 2012) AND grade B or above in MATH 2111"_. Working out what that means, what it leads to, and how far you are from a course takes a lot of cross-referencing. GradPath turns the whole catalogue into a prerequisite graph you can explore: search 4,030 courses, see each one's chain as a tree or an interactive map, mark what you've completed, and it tells you what you can take now and the shortest route to what you can't.
-
-It runs fully offline on iOS and Android. React Native, Expo, TypeScript.
-
-<table>
-  <tr>
-    <td align="center"><img src="docs/demos/map.gif" width="240" alt="The course map: select a course, explore where it leads" /></td>
-    <td align="center"><img src="docs/demos/explore.gif" width="240" alt="Filters, search, a course page and its prerequisite tree" /></td>
-    <td align="center"><img src="docs/demos/plan.gif" width="240" alt="Starring with prerequisites, completing courses and Your path" /></td>
-  </tr>
-  <tr>
-    <td align="center"><b>The course map</b></td>
-    <td align="center"><b>Browse and search</b></td>
-    <td align="center"><b>Plan your route</b></td>
-  </tr>
-</table>
-
-<table>
-  <tr>
-    <td>
-      <b>Try it on Android:</b> <a href="https://github.com/BhanuRana/ust-gradpath/releases/latest/download/UST-GradPath.apk">download the APK</a> (46 MB), or scan the code with your phone.<br/>
-      It's a signed release build from outside the Play Store, so Android asks you to allow installs from your browser.<br/><br/>
-      <b>iPhone:</b> build from source (<a href="#run-it">Run it</a>).
-    </td>
-    <td align="center"><img src="docs/apk-qr.png" width="150" alt="QR code: download the Android APK" /></td>
-  </tr>
-</table>
+**[Download for Android](https://github.com/BhanuRana/ust-gradpath/releases/latest/download/UST-GradPath.apk)** (APK, 46 MB) · [Build for iPhone](#run-it) · [![CI](https://github.com/BhanuRana/ust-gradpath/actions/workflows/ci.yml/badge.svg)](https://github.com/BhanuRana/ust-gradpath/actions/workflows/ci.yml)
 
 ## What it does
+
+<p align="center">
+  <img src="docs/demos/map.gif" width="200" alt="The course map: select a course, explore where it leads" />
+  &nbsp;
+  <img src="docs/demos/explore.gif" width="200" alt="Filters, search, a course page and its prerequisite tree" />
+  &nbsp;
+  <img src="docs/demos/plan.gif" width="200" alt="Starring with prerequisites, completing courses and Your path" />
+</p>
+<p align="center"><sub>The course map · Browse and search · Plan your route</sub></p>
 
 **The course map.** A pan-and-zoom graph of everything a course needs (left) and everything it leads to (right).
 
@@ -51,20 +34,24 @@ It runs fully offline on iOS and Android. React Native, Expo, TypeScript.
 
 **Course pages.** Prerequisites as an expandable AND/OR tree you can follow course by course, the full chain by level, what the course leads to, per-term details, and the original text with every course code linked.
 
-<table>
-  <tr>
-    <td><img src="docs/screenshots/map.png" width="200" alt="Course map" /></td>
-    <td><img src="docs/screenshots/prerequisites.png" width="200" alt="Prerequisite tree and eligibility" /></td>
-    <td><img src="docs/screenshots/path.png" width="200" alt="Your path" /></td>
-    <td><img src="docs/screenshots/star-prompt.png" width="200" alt="Starring with prerequisites" /></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/explore.png" width="200" alt="Explore" /></td>
-    <td><img src="docs/screenshots/filters.png" width="200" alt="Filter sheet" /></td>
-    <td><img src="docs/screenshots/course.png" width="200" alt="Course page" /></td>
-    <td><img src="docs/screenshots/my-courses.png" width="200" alt="My Courses" /></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="docs/screenshots/map.png" width="180" alt="Course map" />
+  &nbsp;
+  <img src="docs/screenshots/prerequisites.png" width="180" alt="Prerequisite tree and eligibility" />
+  &nbsp;
+  <img src="docs/screenshots/path.png" width="180" alt="Your path" />
+  &nbsp;
+  <img src="docs/screenshots/star-prompt.png" width="180" alt="Starring with prerequisites" />
+</p>
+<p align="center">
+  <img src="docs/screenshots/explore.png" width="180" alt="Explore" />
+  &nbsp;
+  <img src="docs/screenshots/filters.png" width="180" alt="Filter sheet" />
+  &nbsp;
+  <img src="docs/screenshots/course.png" width="180" alt="Course page" />
+  &nbsp;
+  <img src="docs/screenshots/my-courses.png" width="180" alt="My Courses" />
+</p>
 
 ## Tech stack
 
@@ -219,6 +206,10 @@ npx expo prebuild -p android
 cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a
 # android/app/build/outputs/apk/release/app-release.apk
 ```
+
+**Download:** the latest APK is on the [releases page](https://github.com/BhanuRana/ust-gradpath/releases/latest). On a phone, scan this to download it directly. Android asks you to allow installs from your browser, since it's not from the Play Store.
+
+<img src="docs/apk-qr.png" width="150" alt="QR code: download the Android APK" />
 
 It's arm64 only, which covers modern Android phones and halves the size, and it's signed with the debug keystore. That's fine for a direct download, but a Play Store release would need an upload key (EAS Build can manage one).
 
