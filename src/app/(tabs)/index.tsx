@@ -8,7 +8,7 @@ import { Chip } from "@/components/ui/chip"
 import { EmptyState } from "@/components/ui/empty-state"
 import { SearchField } from "@/components/ui/search-field"
 import { Text } from "@/components/ui/text"
-import { getIndex, searchCourses } from "@/data/catalog"
+import { getIndex, searchCourses, unlockedCourses } from "@/data/catalog"
 import type { CourseSummary } from "@/data/types"
 import { useCompleted, useSelectedTerm, useStarred } from "@/hooks/use-preferences"
 import { count } from "@/lib/format"
@@ -20,7 +20,7 @@ const LIST_TOP_GAP = 12
 /** The newest term. The term is never "unset": Reset comes back here. */
 const DEFAULTS: CourseFilters = { term: 0 }
 
-type Refinements = Pick<CourseFilters, "prefix" | "career">
+type Refinements = Pick<CourseFilters, "prefix" | "career" | "onlyUnlocked">
 
 export default function ExploreScreen() {
   const { terms } = getIndex()
@@ -28,29 +28,41 @@ export default function ExploreScreen() {
   // The term is remembered between launches; department and level are for this visit.
   const [term, setTerm] = useSelectedTerm()
   const [refinements, setRefinements] = useState<Refinements>({})
-  const { prefix, career } = refinements
-  const filters = useMemo(() => ({ term, prefix, career }), [term, prefix, career])
   const [sheetOpen, setSheetOpen] = useState(false)
   const { starred } = useStarred()
   const { completed } = useCompleted()
+  const { prefix, career } = refinements
+  // Only offered while something is completed: if the user un-completes everything, the filter
+  // switches itself off rather than hiding every course.
+  const onlyUnlocked = !!refinements.onlyUnlocked && completed.size > 0
+  const filters = useMemo(
+    () => ({ term, prefix, career, onlyUnlocked }),
+    [term, prefix, career, onlyUnlocked],
+  )
 
   // The input updates `text` at once; the list filters on a deferred copy that React lets lag
   // behind during fast typing, so the keyboard never waits for the list.
   const query = useDeferredValue(text)
-  const results = useMemo(() => searchCourses({ text: query, ...filters }), [query, filters])
+  const search = useCallback(
+    (f: CourseFilters) =>
+      searchCourses({
+        text: query,
+        ...f,
+        only: f.onlyUnlocked ? unlockedCourses(completed, f.term) : undefined,
+      }),
+    [query, completed],
+  )
+  const results = useMemo(() => search(filters), [search, filters])
 
   const listRef = useRef<FlatList<CourseSummary>>(null)
   useEffect(() => {
     listRef.current?.scrollToOffset({ offset: 0, animated: false })
   }, [results])
 
-  const countFor = useCallback(
-    (f: CourseFilters) => searchCourses({ text: query, ...f }).length,
-    [query],
-  )
+  const countFor = useCallback((f: CourseFilters) => search(f).length, [search])
   // Stable, so rows (memoised) don't re-render when only the search text changes.
   const onOpen = useCallback((code: string) => openCourse(code, term), [term])
-  const activeFilters = [prefix, career].filter(Boolean).length
+  const activeFilters = [prefix, career, onlyUnlocked].filter(Boolean).length
   const update = (patch: Refinements) => setRefinements((r) => ({ ...r, ...patch }))
   const clearAll = () => {
     setText("")
@@ -58,7 +70,7 @@ export default function ExploreScreen() {
   }
   const applyFilters = (f: CourseFilters) => {
     setTerm(f.term)
-    setRefinements({ prefix: f.prefix, career: f.career })
+    setRefinements({ prefix: f.prefix, career: f.career, onlyUnlocked: f.onlyUnlocked })
   }
 
   return (
@@ -115,6 +127,15 @@ export default function ExploreScreen() {
               onPress={() => update({ career: undefined })}
             />
           )}
+          {onlyUnlocked && (
+            <Chip
+              label="Unlocked for me"
+              selected
+              icon="close"
+              accessibilityLabel="Remove Unlocked for me filter"
+              onPress={() => update({ onlyUnlocked: false })}
+            />
+          )}
           <Pressable accessibilityRole="button" onPress={clearAll} hitSlop={8}>
             <Text size="xs" weight="medium" style={styles.tint}>
               Clear filters
@@ -160,6 +181,7 @@ export default function ExploreScreen() {
       <FilterSheet
         visible={sheetOpen}
         value={filters}
+        canFilterUnlocked={completed.size > 0}
         defaults={DEFAULTS}
         countFor={countFor}
         onApply={applyFilters}

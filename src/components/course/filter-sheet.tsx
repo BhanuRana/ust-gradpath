@@ -5,6 +5,7 @@ import {
   Modal,
   Pressable,
   StyleSheet,
+  Switch,
   useWindowDimensions,
   View,
 } from "react-native"
@@ -35,11 +36,15 @@ export interface CourseFilters {
   term?: number
   prefix?: string
   career?: Career
+  /** Only courses whose prerequisites the user meets. */
+  onlyUnlocked?: boolean
 }
 
 interface FilterSheetProps {
   visible: boolean
   value: CourseFilters
+  /** "Unlocked for me" is offered once the user has completed something. */
+  canFilterUnlocked: boolean
   /** How many courses a set of filters would show, so the button can say before applying. */
   countFor: (filters: CourseFilters) => number
   /** What Reset goes back to. */
@@ -64,6 +69,7 @@ const LEVELS: { value: Career | undefined; label: string }[] = [
 export function FilterSheet({
   visible,
   value,
+  canFilterUnlocked,
   countFor,
   defaults,
   onApply,
@@ -153,7 +159,8 @@ export function FilterSheet({
   const isDefault =
     draft.term === defaults.term &&
     draft.prefix === defaults.prefix &&
-    draft.career === defaults.career
+    draft.career === defaults.career &&
+    !!draft.onlyUnlocked === !!defaults.onlyUnlocked
   const update = (patch: Partial<CourseFilters>) => setDraft((d) => ({ ...d, ...patch }))
 
   if (!mounted) return null
@@ -263,6 +270,35 @@ export function FilterSheet({
                 <Ionicons name="chevron-forward" size={18} color={colors.textDim} />
               </Pressable>
             </Section>
+
+            {canFilterUnlocked && (
+              <Section title="My progress">
+                <Pressable
+                  accessibilityRole="switch"
+                  accessibilityLabel="Unlocked for me"
+                  accessibilityState={{ checked: !!draft.onlyUnlocked }}
+                  onPress={() => update({ onlyUnlocked: !draft.onlyUnlocked })}
+                  style={({ pressed }) => [styles.optionRow, pressed && styles.pressed]}
+                >
+                  <View style={styles.iconTile}>
+                    <Ionicons name="lock-open-outline" size={16} color={colors.success} />
+                  </View>
+                  <View style={styles.flex}>
+                    <Text weight="medium">Unlocked for me</Text>
+                    <Text size="xxs" style={styles.dim}>
+                      Only courses whose prerequisites you meet
+                    </Text>
+                  </View>
+                  <Switch
+                    value={!!draft.onlyUnlocked}
+                    onValueChange={(on) => update({ onlyUnlocked: on })}
+                    trackColor={{ true: colors.tint, false: colors.separator }}
+                    accessibilityElementsHidden
+                    importantForAccessibility="no-hide-descendants"
+                  />
+                </Pressable>
+              </Section>
+            )}
 
             <Pressable
               accessibilityRole="button"

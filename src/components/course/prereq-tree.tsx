@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from "react-native"
 
 import { Text } from "@/components/ui/text"
 import { getCourse, getPrereqGraph } from "@/data/catalog"
+import { evaluate } from "@/data/prereq/evaluate"
 import { expansionState, prereqTreeFor } from "@/data/prereq/traverse"
 import type { PrereqNode } from "@/data/types"
 import { colors, spacing } from "@/theme"
@@ -13,6 +14,8 @@ interface PrereqTreeProps {
   node: PrereqNode
   /** The course being viewed: the first ancestor on every branch. */
   rootCode: string
+  /** Courses the user has completed: ticked, and groups they satisfy are marked met. */
+  completed: ReadonlySet<string>
   onOpenCourse: (code: string) => void
 }
 
@@ -21,18 +24,26 @@ interface PrereqTreeProps {
  * be expanded to reveal its own, one level at a time, so rendering cost follows what the user
  * opens rather than the size of the graph (the deepest chain is 9 levels).
  */
-export function PrereqTree({ node, rootCode, onOpenCourse }: PrereqTreeProps) {
-  return <NodeView node={node} ancestors={[rootCode]} onOpenCourse={onOpenCourse} />
+export function PrereqTree({ node, rootCode, completed, onOpenCourse }: PrereqTreeProps) {
+  return (
+    <NodeView
+      node={node}
+      ancestors={[rootCode]}
+      completed={completed}
+      onOpenCourse={onOpenCourse}
+    />
+  )
 }
 
 interface NodeViewProps {
   node: PrereqNode
   /** Course codes from the root down to this node's parent course. */
   ancestors: string[]
+  completed: ReadonlySet<string>
   onOpenCourse: (code: string) => void
 }
 
-function NodeView({ node, ancestors, onOpenCourse }: NodeViewProps) {
+function NodeView({ node, ancestors, completed, onOpenCourse }: NodeViewProps) {
   switch (node.kind) {
     case "course":
       return (
@@ -40,6 +51,7 @@ function NodeView({ node, ancestors, onOpenCourse }: NodeViewProps) {
           code={node.code}
           note={node.note}
           ancestors={ancestors}
+          completed={completed}
           onOpenCourse={onOpenCourse}
         />
       )
@@ -49,21 +61,30 @@ function NodeView({ node, ancestors, onOpenCourse }: NodeViewProps) {
           {node.text}
         </Text>
       )
-    default:
+    default: {
+      const label = node.kind === "all" ? "ALL OF" : "ONE OF"
+      const met = completed.size > 0 && evaluate(node, completed) === "met"
       return (
         <View>
-          <View style={styles.groupPill}>
-            <Text size="xxs" weight="bold" style={styles.groupLabel}>
-              {node.kind === "all" ? "ALL OF" : "ONE OF"}
+          <View style={[styles.groupPill, met && styles.groupPillMet]}>
+            <Text size="xxs" weight="bold" style={[styles.groupLabel, met && styles.met]}>
+              {met ? `${label} · MET ✓` : label}
             </Text>
           </View>
           <View style={styles.group}>
             {node.children.map((child, i) => (
-              <NodeView key={i} node={child} ancestors={ancestors} onOpenCourse={onOpenCourse} />
+              <NodeView
+                key={i}
+                node={child}
+                ancestors={ancestors}
+                completed={completed}
+                onOpenCourse={onOpenCourse}
+              />
             ))}
           </View>
         </View>
       )
+    }
   }
 }
 
@@ -71,10 +92,11 @@ interface CourseNodeProps {
   code: string
   note?: string
   ancestors: string[]
+  completed: ReadonlySet<string>
   onOpenCourse: (code: string) => void
 }
 
-function CourseNode({ code, note, ancestors, onOpenCourse }: CourseNodeProps) {
+function CourseNode({ code, note, ancestors, completed, onOpenCourse }: CourseNodeProps) {
   const [expanded, setExpanded] = useState(false)
 
   const graph = getPrereqGraph()
@@ -84,6 +106,7 @@ function CourseNode({ code, note, ancestors, onOpenCourse }: CourseNodeProps) {
   // Deeper levels use each course's newest version; only the viewed course is term-specific.
   const children = expanded && canExpand ? prereqTreeFor(graph, code) : null
   const status = state === "expandable" ? undefined : STATUS_TEXT[state]
+  const isCompleted = completed.has(code)
 
   return (
     <View>
@@ -115,7 +138,9 @@ function CourseNode({ code, note, ancestors, onOpenCourse }: CourseNodeProps) {
 
         <Pressable
           accessibilityRole={course ? "link" : "text"}
-          accessibilityLabel={[code, course?.title, note, status].filter(Boolean).join(", ")}
+          accessibilityLabel={[code, course?.title, isCompleted && "completed", note, status]
+            .filter(Boolean)
+            .join(", ")}
           disabled={!course}
           onPress={() => onOpenCourse(code)}
           style={({ pressed }) => [styles.flex, pressed && styles.pressed]}
@@ -131,6 +156,14 @@ function CourseNode({ code, note, ancestors, onOpenCourse }: CourseNodeProps) {
               </Text>
             )}
           </Text>
+          {isCompleted && (
+            <View style={styles.completedRow}>
+              <Ionicons name="checkmark-circle" size={13} color={colors.success} />
+              <Text size="xxs" style={styles.met}>
+                Completed
+              </Text>
+            </View>
+          )}
           {note && (
             <Text size="xxs" style={styles.note}>
               {note}
@@ -146,7 +179,12 @@ function CourseNode({ code, note, ancestors, onOpenCourse }: CourseNodeProps) {
 
       {children && (
         <View style={styles.nested}>
-          <NodeView node={children} ancestors={[...ancestors, code]} onOpenCourse={onOpenCourse} />
+          <NodeView
+            node={children}
+            ancestors={[...ancestors, code]}
+            completed={completed}
+            onOpenCourse={onOpenCourse}
+          />
         </View>
       )}
     </View>
@@ -183,7 +221,10 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: colors.surfaceAlt,
   },
+  groupPillMet: { backgroundColor: colors.successSoft },
   groupLabel: { color: colors.textDim, letterSpacing: 0.8 },
+  met: { color: colors.success },
+  completedRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   group: {
     borderLeftWidth: 2,
     borderLeftColor: colors.separator,

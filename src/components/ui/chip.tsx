@@ -9,6 +9,8 @@ import { Text } from "./text"
 interface ChipProps extends Omit<PressableProps, "children" | "style"> {
   label: string
   selected?: boolean
+  /** A selected chip is navy; `success` makes it green (e.g. a completed course). */
+  tone?: "success"
   /** Trailing icon, e.g. a cross on a removable filter. */
   icon?: ComponentProps<typeof Ionicons>["name"]
   /** Dimmed and dashed, e.g. a term the course isn't offered in. */
@@ -16,7 +18,7 @@ interface ChipProps extends Omit<PressableProps, "children" | "style"> {
 }
 
 /** A small rounded toggle, for filters and terms. */
-export function Chip({ label, selected, icon, muted, ...rest }: ChipProps) {
+export function Chip({ label, selected, tone, icon, muted, ...rest }: ChipProps) {
   const color = selected ? colors.white : muted ? colors.textDim : colors.text
   return (
     <Pressable
@@ -27,6 +29,7 @@ export function Chip({ label, selected, icon, muted, ...rest }: ChipProps) {
       style={({ pressed }) => [
         styles.chip,
         selected && styles.selected,
+        selected && tone === "success" && styles.success,
         muted && styles.muted,
         pressed && styles.pressed,
       ]}
@@ -53,6 +56,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   selected: { backgroundColor: colors.tint, borderColor: colors.tint },
+  success: { backgroundColor: colors.success, borderColor: colors.success },
   muted: { borderStyle: "dashed", backgroundColor: "transparent" },
   pressed: { opacity: 0.7 },
   label: { lineHeight: 18 },

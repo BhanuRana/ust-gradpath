@@ -11,6 +11,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
 import { CodeChip } from "@/components/course/code-chip"
+import { Eligibility } from "@/components/course/eligibility"
 import { LinkedCodesText } from "@/components/course/linked-codes-text"
 import { PrereqTree } from "@/components/course/prereq-tree"
 import { Section } from "@/components/course/section"
@@ -185,7 +186,8 @@ export default function CourseScreen() {
         <Section icon="git-network-outline" title="Prerequisites">
           {tree ? (
             <>
-              <PrereqTree node={tree} rootCode={code} onOpenCourse={open} />
+              {!isCompleted && <Eligibility tree={tree} completed={completed} />}
+              <PrereqTree node={tree} rootCode={code} completed={completed} onOpenCourse={open} />
               <View style={styles.raw}>
                 <Text size="xxs" weight="bold" style={styles.dim}>
                   As written
@@ -213,7 +215,7 @@ export default function CourseScreen() {
                 </Text>
                 <View style={[styles.wrap, styles.flex]}>
                   {level.map((c) => (
-                    <CodeChip key={c} code={c} onPress={open} />
+                    <CodeChip key={c} code={c} done={completed.has(c)} onPress={open} />
                   ))}
                 </View>
               </View>
@@ -229,7 +231,7 @@ export default function CourseScreen() {
           {unlocks.length ? (
             <View style={styles.wrap}>
               {unlocks.map((c) => (
-                <CodeChip key={c} code={c} onPress={open} />
+                <CodeChip key={c} code={c} done={completed.has(c)} onPress={open} />
               ))}
             </View>
           ) : (
