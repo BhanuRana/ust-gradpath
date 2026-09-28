@@ -1,0 +1,9 @@
+#flow: Demo setup
+#intent:
+# Fresh app state before recording a demo (the demo flows themselves don't relaunch, so the
+# recording starts on a settled screen). See scripts/record-demo.sh.
+appId: com.bhanurana.gradpath
+onFlowStart:
+  - runFlow: ../shared/on-flow-start.yaml
+---
+- waitForAnimationToEnd
