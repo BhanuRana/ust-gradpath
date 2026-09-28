@@ -85,12 +85,12 @@ It runs fully offline on iOS and Android. React Native, Expo, TypeScript.
 ```mermaid
 flowchart LR
   raw["courses.json<br/>28 MB · 15,178 rows"] -- "npm run data" --> build["scripts/build-data.ts"]
-  build --> index["index.json · 574 KB<br/>every course, for lists and search"]
-  build --> graph["prereqs.json · 176 KB<br/>parsed trees + 'leads to' index"]
-  build --> details["details/PREFIX.json × 129<br/>full records, one per department"]
-  index & graph & details --> data["src/data<br/>catalog · parse · traverse<br/>evaluate · plan · map"]
-  prefs[("MMKV<br/>stars · completed · term")] --> screens
-  data --> screens["src/app<br/>Explore · Course · Map · My Courses"]
+  build --> idx["index.json · 574 KB<br/>every course, for lists and search"]
+  build --> prq["prereqs.json · 176 KB<br/>parsed trees + 'leads to' index"]
+  build --> det["details/PREFIX.json × 129<br/>full records, one per department"]
+  idx & prq & det --> lib["src/data<br/>catalog · parse · traverse<br/>evaluate · plan · map"]
+  prefs[("MMKV<br/>stars · completed · term")] --> ui
+  lib --> ui["src/app<br/>Explore · Course · Map · My Courses"]
 ```
 
 **Why this shape:**
