@@ -1,0 +1,36 @@
+#flow: filter-and-star
+#intent:
+# Filter by department + level in the filter sheet, star a course, and find it in My Courses.
+appId: com.bhanurana.gradpath
+onFlowStart:
+  - runFlow: ../shared/on-flow-start.yaml
+---
+- tapOn:
+    id: 'filters-button'
+- tapOn: 'All terms'
+- tapOn:
+    id: 'filter-department'
+- tapOn: '.*Filter departments.*'
+- inputText: 'COMP'
+- tapOn:
+    id: 'department-COMP'
+- tapOn: 'Undergraduate'
+- assertVisible: 'Show 72 courses'
+- tapOn:
+    id: 'filters-apply'
+- assertVisible: 'Clear filters'
+- assertVisible: 'Filters, 2 active'
+- assertNotVisible:
+    id: 'course-row-ACCT 1010'
+- tapOn:
+    id: 'course-row-COMP 1021'
+- tapOn: 'Star course'
+- assertVisible: 'Unstar course'
+- tapOn: 'Back'
+- tapOn: 'My Courses.*'
+- assertVisible:
+    id: 'course-row-COMP 1021'
+- tapOn: 'Explore.*'
+- tapOn: '.*Search code or title.*'
+- inputText: 'zzqqx'
+- assertVisible: 'No matching courses'

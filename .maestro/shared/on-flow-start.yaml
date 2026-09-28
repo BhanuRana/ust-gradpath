@@ -1,0 +1,11 @@
+# Every flow starts from a fresh install state (nothing starred or completed) with the
+# catalogue on screen. Include it as each flow's `onFlowStart`.
+appId: com.bhanurana.gradpath
+---
+- launchApp:
+    clearState: true
+    stopApp: true
+- extendedWaitUntil:
+    visible:
+      id: search-input
+    timeout: 30000

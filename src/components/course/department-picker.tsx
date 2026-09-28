@@ -59,7 +59,7 @@ export function DepartmentPicker(props: DepartmentPickerProps) {
           <SearchField
             value={filter}
             onChangeText={setFilter}
-            placeholder="Filter, e.g. COMP"
+            placeholder="Filter departments, e.g. COMP"
             autoCapitalize="characters"
           />
         </View>

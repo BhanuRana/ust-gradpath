@@ -10,7 +10,8 @@
     "lint": "expo lint",
     "format": "prettier --write .",
     "test": "jest",
-    "data": "tsx scripts/build-data.ts"
+    "data": "tsx scripts/build-data.ts",
+    "test:e2e": "maestro test .maestro/flows"
   },
   "dependencies": {
     "@expo-google-fonts/space-grotesk": "^0.4.1",
