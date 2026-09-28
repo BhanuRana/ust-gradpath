@@ -8,16 +8,34 @@
     "userInterfaceStyle": "light",
     "ios": {
       "bundleIdentifier": "com.bhanurana.gradpath",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "icon": "./assets/images/app-icon-ios.png"
     },
     "android": {
       "package": "com.bhanurana.gradpath",
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "icon": "./assets/images/app-icon-android-legacy.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/app-icon-android-adaptive-foreground.png",
+        "backgroundImage": "./assets/images/app-icon-android-adaptive-background.png"
+      }
     },
-    "plugins": ["expo-router", ["expo-splash-screen", { "backgroundColor": "#1F4F91" }]],
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/app-icon-android-adaptive-foreground.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#1F4F91"
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "icon": "./assets/images/app-icon-all.png"
   }
 }
