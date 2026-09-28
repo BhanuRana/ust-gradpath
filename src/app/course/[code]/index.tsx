@@ -27,7 +27,7 @@ import { planPath } from "@/data/prereq/plan"
 import { prereqTreeFor, prerequisiteChain, unlockedBy } from "@/data/prereq/traverse"
 import { useCompleted, useStarred } from "@/hooks/use-preferences"
 import { count } from "@/lib/format"
-import { openCourse } from "@/lib/navigation"
+import { openCourse, openMap } from "@/lib/navigation"
 import { colors, radius, spacing } from "@/theme"
 
 export default function CourseScreen() {
@@ -225,6 +225,29 @@ export default function CourseScreen() {
               No prerequisites listed.
             </Text>
           )}
+          {(tree || unlocks.length > 0) && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="View as map"
+              accessibilityHint="See how the whole chain fits together"
+              testID="open-map"
+              onPress={() => openMap(code, term)}
+              style={({ pressed }) => [styles.mapButton, pressed && styles.pressed]}
+            >
+              <View style={styles.mapIcon}>
+                <Ionicons name="git-network-outline" size={18} color={colors.white} />
+              </View>
+              <View style={styles.flex}>
+                <Text size="xs" weight="semiBold" style={styles.tint}>
+                  View as map
+                </Text>
+                <Text size="xxs" style={styles.dim}>
+                  See how the whole chain fits together
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={colors.tint} />
+            </Pressable>
+          )}
         </Section>
 
         {path && (
@@ -346,6 +369,7 @@ const styles = StyleSheet.create({
   dim: { color: colors.textDim },
   onHero: { color: colors.onHero },
   hero: { color: colors.hero },
+  tint: { color: colors.tint },
   pressed: { opacity: 0.7 },
   content: { paddingBottom: spacing.xxl },
   bar: {
@@ -379,6 +403,23 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: colors.surfaceAlt,
     gap: 2,
+  },
+  mapButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    backgroundColor: colors.tintSoft,
+  },
+  mapIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.tint,
   },
   level: { flexDirection: "row", gap: spacing.sm, alignItems: "flex-start" },
   levelLabel: { width: 52, paddingTop: 6 },

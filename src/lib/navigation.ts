@@ -10,3 +10,11 @@ export function openCourse(code: string, term?: number) {
     params: term === undefined ? { code } : { code, term: String(term) },
   })
 }
+
+/** Pushes the course map for `code`. */
+export function openMap(code: string, term?: number) {
+  router.push({
+    pathname: "/course/[code]/map",
+    params: term === undefined ? { code } : { code, term: String(term) },
+  })
+}
