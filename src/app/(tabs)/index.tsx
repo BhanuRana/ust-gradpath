@@ -10,6 +10,7 @@ import { SearchField } from "@/components/ui/search-field"
 import { Text } from "@/components/ui/text"
 import { getIndex, searchCourses } from "@/data/catalog"
 import type { CourseSummary } from "@/data/types"
+import { useCompleted, useSelectedTerm, useStarred } from "@/hooks/use-preferences"
 import { count } from "@/lib/format"
 import { openCourse } from "@/lib/navigation"
 import { colors, spacing } from "@/theme"
@@ -19,12 +20,19 @@ const LIST_TOP_GAP = 12
 /** The newest term. The term is never "unset": Reset comes back here. */
 const DEFAULTS: CourseFilters = { term: 0 }
 
+type Refinements = Pick<CourseFilters, "prefix" | "career">
+
 export default function ExploreScreen() {
   const { terms } = getIndex()
   const [text, setText] = useState("")
-  const [filters, setFilters] = useState<CourseFilters>(DEFAULTS)
+  // The term is remembered between launches; department and level are for this visit.
+  const [term, setTerm] = useSelectedTerm()
+  const [refinements, setRefinements] = useState<Refinements>({})
+  const { prefix, career } = refinements
+  const filters = useMemo(() => ({ term, prefix, career }), [term, prefix, career])
   const [sheetOpen, setSheetOpen] = useState(false)
-  const { term, prefix, career } = filters
+  const { starred } = useStarred()
+  const { completed } = useCompleted()
 
   // The input updates `text` at once; the list filters on a deferred copy that React lets lag
   // behind during fast typing, so the keyboard never waits for the list.
@@ -43,10 +51,14 @@ export default function ExploreScreen() {
   // Stable, so rows (memoised) don't re-render when only the search text changes.
   const onOpen = useCallback((code: string) => openCourse(code, term), [term])
   const activeFilters = [prefix, career].filter(Boolean).length
-  const update = (patch: Partial<CourseFilters>) => setFilters((f) => ({ ...f, ...patch }))
+  const update = (patch: Refinements) => setRefinements((r) => ({ ...r, ...patch }))
   const clearAll = () => {
     setText("")
-    setFilters((f) => ({ term: f.term }))
+    setRefinements({})
+  }
+  const applyFilters = (f: CourseFilters) => {
+    setTerm(f.term)
+    setRefinements({ prefix: f.prefix, career: f.career })
   }
 
   return (
@@ -115,7 +127,16 @@ export default function ExploreScreen() {
         ref={listRef}
         data={results}
         keyExtractor={(c) => c.code}
-        renderItem={({ item }) => <CourseRow course={item} query={query} onPress={onOpen} />}
+        renderItem={({ item }) => (
+          <CourseRow
+            course={item}
+            query={query}
+            starred={starred.has(item.code)}
+            completed={completed.has(item.code)}
+            onPress={onOpen}
+          />
+        )}
+        extraData={[starred, completed]}
         getItemLayout={(_, index) => ({
           length: COURSE_ROW_HEIGHT,
           offset: LIST_TOP_GAP + COURSE_ROW_HEIGHT * index,
@@ -141,7 +162,7 @@ export default function ExploreScreen() {
         value={filters}
         defaults={DEFAULTS}
         countFor={countFor}
-        onApply={setFilters}
+        onApply={applyFilters}
         onClose={() => setSheetOpen(false)}
       />
     </View>

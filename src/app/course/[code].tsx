@@ -1,6 +1,7 @@
+import { Ionicons } from "@expo/vector-icons"
 import { router, useLocalSearchParams } from "expo-router"
 import { useMemo, useState } from "react"
-import { StyleSheet, View } from "react-native"
+import { Pressable, StyleSheet, View } from "react-native"
 import Animated, {
   interpolate,
   useAnimatedScrollHandler,
@@ -19,9 +20,10 @@ import { EmptyState } from "@/components/ui/empty-state"
 import { Text } from "@/components/ui/text"
 import { getCourse, getCourseVersion, getIndex, getPrereqGraph } from "@/data/catalog"
 import { prereqTreeFor, prerequisiteChain, unlockedBy } from "@/data/prereq/traverse"
+import { useCompleted, useStarred } from "@/hooks/use-preferences"
 import { count } from "@/lib/format"
 import { openCourse } from "@/lib/navigation"
-import { colors, spacing } from "@/theme"
+import { colors, radius, spacing } from "@/theme"
 
 export default function CourseScreen() {
   const params = useLocalSearchParams<{ code: string; term?: string }>()
@@ -30,6 +32,10 @@ export default function CourseScreen() {
   const { terms } = getIndex()
   const graph = getPrereqGraph()
   const course = getCourse(code)
+  const { starred, toggle: toggleStarred } = useStarred()
+  const { completed, toggle: toggleCompleted } = useCompleted()
+  const isStarred = starred.has(code)
+  const isCompleted = completed.has(code)
 
   // The term the user was browsing if the course runs then, otherwise its newest term.
   const [term, setTerm] = useState(
@@ -67,7 +73,18 @@ export default function CourseScreen() {
           {code}
         </Text>
       </Animated.View>
-      <View style={styles.barSpacer} />
+      {course ? (
+        <HeroButton
+          icon={isStarred ? "star" : "star-outline"}
+          iconColor={isStarred ? colors.heroAccent : undefined}
+          accessibilityLabel={isStarred ? "Unstar course" : "Star course"}
+          accessibilityState={{ selected: isStarred }}
+          testID="toggle-star"
+          onPress={() => toggleStarred(code)}
+        />
+      ) : (
+        <View style={styles.barSpacer} />
+      )}
     </View>
   )
 
@@ -119,6 +136,27 @@ export default function CourseScreen() {
             />
             <HeroPill icon="calendar-outline" text={terms[term].name} />
           </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={isCompleted ? "Completed" : "Mark as completed"}
+            accessibilityState={{ checked: isCompleted }}
+            onPress={() => toggleCompleted(code)}
+            testID="toggle-completed"
+            style={({ pressed }) => [
+              styles.completeButton,
+              isCompleted && styles.completeButtonDone,
+              pressed && styles.pressed,
+            ]}
+          >
+            <Ionicons
+              name={isCompleted ? "checkmark-circle" : "add-circle-outline"}
+              size={20}
+              color={isCompleted ? colors.heroSuccess : colors.hero}
+            />
+            <Text size="xs" weight="semiBold" style={isCompleted ? styles.onHero : styles.hero}>
+              {isCompleted ? "Completed" : "Mark as completed"}
+            </Text>
+          </Pressable>
         </HeroHeader>
 
         <Section icon="calendar-outline" title="Offered in">
@@ -244,6 +282,8 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   dim: { color: colors.textDim },
   onHero: { color: colors.onHero },
+  hero: { color: colors.hero },
+  pressed: { opacity: 0.7 },
   content: { paddingBottom: spacing.xxl },
   bar: {
     flexDirection: "row",
@@ -258,6 +298,17 @@ const styles = StyleSheet.create({
   barSpacer: { width: 44 },
   band: { paddingTop: spacing.xxs, paddingBottom: spacing.lg, gap: spacing.sm },
   courseTitle: { marginTop: -4 },
+  completeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    height: 46,
+    marginTop: spacing.xxs,
+    borderRadius: radius.md,
+    backgroundColor: colors.onHero,
+  },
+  completeButtonDone: { backgroundColor: colors.heroRaised },
   wrap: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   raw: {
     marginTop: spacing.sm,

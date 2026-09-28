@@ -18,6 +18,8 @@ export function Button({ label, icon, variant = "primary", ...rest }: ButtonProp
   return (
     <Pressable
       accessibilityRole="button"
+      // Explicit, or the icon's glyph becomes part of what screen readers announce.
+      accessibilityLabel={label}
       style={({ pressed }) => [styles.button, styles[variant], pressed && styles.pressed]}
       {...rest}
     >
