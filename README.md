@@ -28,7 +28,7 @@ It runs fully offline on iOS and Android. React Native, Expo, TypeScript.
       It's a signed release build from outside the Play Store, so Android asks you to allow installs from your browser.<br/><br/>
       <b>iPhone:</b> build from source (<a href="#run-it">Run it</a>).
     </td>
-    <td align="center"><img src="docs/apk-qr.png" width="130" alt="QR code: download the Android APK" /></td>
+    <td align="center"><img src="docs/apk-qr.png" width="150" alt="QR code: download the Android APK" /></td>
   </tr>
 </table>
 
@@ -233,4 +233,4 @@ It's arm64 only, which covers modern Android phones and halves the size, and it'
 
 ## Background and data
 
-GradPath grew out of my submission for the USThing App Team 2026-27 technical test and was rebuilt as a standalone app. It isn't affiliated with HKUST or USThing. The course data is HKUST's public course catalogue and schedule (via UST Archive), as prepared by USThing for that test.
+GradPath grew out of my submission for the USThing App Team 2026-27 technical test and was rebuilt as a standalone app. It isn't affiliated with HKUST or USThing. The course data is HKUST's public course catalogue and schedule (via UST Archive), as prepared by USThing for that test. The Android robot in the download QR code is reproduced from work created and shared by Google, used under the [Creative Commons 3.0 Attribution License](https://creativecommons.org/licenses/by/3.0/).
