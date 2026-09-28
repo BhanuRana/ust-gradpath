@@ -41,3 +41,6 @@ app-example
 # generated native folders
 /ios
 /android
+
+# the raw dataset (downloaded by `npm run data`)
+/data

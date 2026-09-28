@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
     "format": "prettier --write .",
-    "test": "jest"
+    "test": "jest",
+    "data": "tsx scripts/build-data.ts"
   },
   "dependencies": {
     "@react-navigation/bottom-tabs": "^7.15.5",
@@ -39,6 +40,7 @@
     "jest": "~29.7.0",
     "jest-expo": "~55.0.22",
     "prettier": "^3.9.9",
+    "tsx": "^4.23.15",
     "typescript": "~5.9.2"
   },
   "private": true,
