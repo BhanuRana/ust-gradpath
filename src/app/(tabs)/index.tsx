@@ -11,6 +11,7 @@ import { Text } from "@/components/ui/text"
 import { getIndex, searchCourses } from "@/data/catalog"
 import type { CourseSummary } from "@/data/types"
 import { count } from "@/lib/format"
+import { openCourse } from "@/lib/navigation"
 import { colors, spacing } from "@/theme"
 
 /** Room above the first card so its shadow isn't clipped; getItemLayout adds it to offsets. */
@@ -39,6 +40,8 @@ export default function ExploreScreen() {
     (f: CourseFilters) => searchCourses({ text: query, ...f }).length,
     [query],
   )
+  // Stable, so rows (memoised) don't re-render when only the search text changes.
+  const onOpen = useCallback((code: string) => openCourse(code, term), [term])
   const activeFilters = [prefix, career].filter(Boolean).length
   const update = (patch: Partial<CourseFilters>) => setFilters((f) => ({ ...f, ...patch }))
   const clearAll = () => {
@@ -112,7 +115,7 @@ export default function ExploreScreen() {
         ref={listRef}
         data={results}
         keyExtractor={(c) => c.code}
-        renderItem={({ item }) => <CourseRow course={item} query={query} />}
+        renderItem={({ item }) => <CourseRow course={item} query={query} onPress={onOpen} />}
         getItemLayout={(_, index) => ({
           length: COURSE_ROW_HEIGHT,
           offset: LIST_TOP_GAP + COURSE_ROW_HEIGHT * index,
