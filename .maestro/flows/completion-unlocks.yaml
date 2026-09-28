@@ -6,62 +6,62 @@ appId: com.bhanurana.gradpath
 onFlowStart:
   - runFlow: ../shared/on-flow-start.yaml
 ---
-- tapOn: '.*Search code or title.*'
-- inputText: 'COMP 2011'
+- tapOn: ".*Search code or title.*"
+- inputText: "COMP 2011"
 - tapOn:
-    id: 'course-row-COMP 2011'
+    id: "course-row-COMP 2011"
 - tapOn:
-    id: 'toggle-completed'
+    id: "toggle-completed"
 # Marking completed may ask about its prerequisites too; this flow keeps to one course.
 - runFlow:
     when:
       visible:
-        id: 'complete-prompt'
+        id: "complete-prompt"
     commands:
       - tapOn:
-          id: 'complete-only'
-- tapOn: 'Back'
+          id: "complete-only"
+- tapOn: "Back"
 # Refocus before typing: Android's keyboard drops its connection to the field on navigation.
-- tapOn: '.*Search code or title.*'
+- tapOn: ".*Search code or title.*"
 - eraseText: 20
-- inputText: 'COMP 3711'
+- inputText: "COMP 3711"
 - tapOn:
-    id: 'course-row-COMP 3711'
-- assertVisible: 'Still needed: one of COMP 2711.*'
+    id: "course-row-COMP 3711"
+- assertVisible: "Still needed: one of COMP 2711.*"
 - takeScreenshot: completion-1-needed
 # COMP 2011 is ticked in the tree; follow the missing branch and complete it.
-- assertVisible: 'COMP 2011, .*Completed'
+- assertVisible: "COMP 2011, .*Completed"
 - scrollUntilVisible:
-    element: 'COMP 2711, .*'
+    element: "COMP 2711, .*"
     direction: DOWN
     centerElement: true
-- tapOn: 'COMP 2711, .*'
+- tapOn: "COMP 2711, .*"
 - tapOn:
-    id: 'toggle-completed'
+    id: "toggle-completed"
 # Marking completed may ask about its prerequisites too; this flow keeps to one course.
 - runFlow:
     when:
       visible:
-        id: 'complete-prompt'
+        id: "complete-prompt"
     commands:
       - tapOn:
-          id: 'complete-only'
-- tapOn: 'Back'
-- assertVisible: 'You meet the prerequisites'
+          id: "complete-only"
+- tapOn: "Back"
+- assertVisible: "You meet the prerequisites"
 - takeScreenshot: completion-2-met
-- tapOn: 'Back'
+- tapOn: "Back"
 - tapOn:
-    id: 'filters-button'
-- tapOn: 'Unlocked for me'
+    id: "filters-button"
+- tapOn: "Unlocked for me"
 - tapOn:
-    id: 'filters-apply'
-- tapOn: '.*Search code or title.*'
+    id: "filters-apply"
+- tapOn: ".*Search code or title.*"
 - eraseText: 20
-- inputText: 'COMP 37'
+- inputText: "COMP 37"
 - assertVisible:
-    id: 'course-row-COMP 3711'
+    id: "course-row-COMP 3711"
 - takeScreenshot: completion-3-unlocked
 - hideKeyboard
-- tapOn: 'My Courses.*'
-- assertVisible: 'COMPLETED · 2'
+- tapOn: "My Courses.*"
+- assertVisible: "COMPLETED · 2"
 - takeScreenshot: completion-4-my-courses

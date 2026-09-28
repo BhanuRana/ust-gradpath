@@ -6,14 +6,14 @@ appId: com.bhanurana.gradpath
 onFlowStart:
   - runFlow: ../shared/on-flow-start.yaml
 ---
-- tapOn: '.*Search code or title.*'
-- inputText: 'ucmp6030'
+- tapOn: ".*Search code or title.*"
+- inputText: "ucmp6030"
 - tapOn:
-    id: 'course-row-UCMP 6030'
-- tapOn: 'Show prerequisites of UCMP 6040'
-- assertVisible: 'UCMP 6030, .*Loops back'
-- assertNotVisible: 'Show prerequisites of UCMP 6030'
+    id: "course-row-UCMP 6030"
+- tapOn: "Show prerequisites of UCMP 6040"
+- assertVisible: "UCMP 6030, .*Loops back"
+- assertNotVisible: "Show prerequisites of UCMP 6030"
 # The chain summary sits below the fold on smaller screens.
 - scrollUntilVisible:
     element:
-      text: '2 courses across 2 levels'
+      text: "2 courses across 2 levels"

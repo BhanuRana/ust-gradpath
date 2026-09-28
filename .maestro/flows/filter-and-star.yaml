@@ -6,31 +6,31 @@ onFlowStart:
   - runFlow: ../shared/on-flow-start.yaml
 ---
 - tapOn:
-    id: 'filters-button'
-- tapOn: 'All terms'
+    id: "filters-button"
+- tapOn: "All terms"
 - tapOn:
-    id: 'filter-department'
-- tapOn: '.*Filter departments.*'
-- inputText: 'COMP'
+    id: "filter-department"
+- tapOn: ".*Filter departments.*"
+- inputText: "COMP"
 - tapOn:
-    id: 'department-COMP'
-- tapOn: 'Undergraduate'
-- assertVisible: 'Show 72 courses'
+    id: "department-COMP"
+- tapOn: "Undergraduate"
+- assertVisible: "Show 72 courses"
 - tapOn:
-    id: 'filters-apply'
-- assertVisible: 'Clear filters'
-- assertVisible: 'Filters, 2 active'
+    id: "filters-apply"
+- assertVisible: "Clear filters"
+- assertVisible: "Filters, 2 active"
 - assertNotVisible:
-    id: 'course-row-ACCT 1010'
+    id: "course-row-ACCT 1010"
 - tapOn:
-    id: 'course-row-COMP 1021'
-- tapOn: 'Star course'
-- assertVisible: 'Unstar course'
-- tapOn: 'Back'
-- tapOn: 'My Courses.*'
+    id: "course-row-COMP 1021"
+- tapOn: "Star course"
+- assertVisible: "Unstar course"
+- tapOn: "Back"
+- tapOn: "My Courses.*"
 - assertVisible:
-    id: 'course-row-COMP 1021'
-- tapOn: 'Explore.*'
-- tapOn: '.*Search code or title.*'
-- inputText: 'zzqqx'
-- assertVisible: 'No matching courses'
+    id: "course-row-COMP 1021"
+- tapOn: "Explore.*"
+- tapOn: ".*Search code or title.*"
+- inputText: "zzqqx"
+- assertVisible: "No matching courses"
