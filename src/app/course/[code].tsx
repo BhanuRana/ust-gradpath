@@ -11,6 +11,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
 import { CodeChip } from "@/components/course/code-chip"
+import { CoursePath } from "@/components/course/course-path"
 import { Eligibility } from "@/components/course/eligibility"
 import { LinkedCodesText } from "@/components/course/linked-codes-text"
 import { PrereqTree } from "@/components/course/prereq-tree"
@@ -22,6 +23,7 @@ import { EmptyState } from "@/components/ui/empty-state"
 import { Text } from "@/components/ui/text"
 import { getCourse, getCourseVersion, getIndex, getPrereqGraph } from "@/data/catalog"
 import { missingGroups } from "@/data/prereq/evaluate"
+import { planPath } from "@/data/prereq/plan"
 import { prereqTreeFor, prerequisiteChain, unlockedBy } from "@/data/prereq/traverse"
 import { useCompleted, useStarred } from "@/hooks/use-preferences"
 import { count } from "@/lib/format"
@@ -56,6 +58,11 @@ export default function CourseScreen() {
     return levels
   }, [graph, code, term])
   const unlocks = unlockedBy(graph, code)
+  // Replanned as courses are completed or starred: stars steer its "one of" choices.
+  const path = useMemo(
+    () => planPath(graph, code, completed, starred, term),
+    [graph, code, completed, starred, term],
+  )
   const open = (next: string) => openCourse(next, term)
 
   // Starring or completing a course whose prerequisites aren't met asks about those too.
@@ -219,6 +226,23 @@ export default function CourseScreen() {
             </Text>
           )}
         </Section>
+
+        {path && (
+          <Section
+            icon="trail-sign-outline"
+            title="Your path"
+            subtitle={`${count(path.steps.flat().length, "course")} to take first · ${count(path.steps.length, "step")}`}
+          >
+            <CoursePath
+              path={path}
+              target={code}
+              starred={starred}
+              hasCompleted={completed.size > 0}
+              onOpenCourse={open}
+              onStarAll={addStarred}
+            />
+          </Section>
+        )}
 
         {chainLevels.length > 0 && (
           <Section
