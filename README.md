@@ -1,6 +1,4 @@
-# UST GradPath
-
-**Plan your route through HKUST courses.**
+![UST GradPath: 4,030 HKUST courses as one prerequisite graph. See what you can take, and your route to any course.](docs/social-preview.png)
 
 [![CI](https://github.com/BhanuRana/ust-gradpath/actions/workflows/ci.yml/badge.svg)](https://github.com/BhanuRana/ust-gradpath/actions/workflows/ci.yml)
 
